@@ -1,0 +1,636 @@
+<?php
+
+include_once ($racine . 'modele/Match.php');
+include_once ($racine . 'modele/Formation.php');
+include_once ($racine . 'modele/Equipe.php');
+include_once ($racine . 'modele/Phase.php');
+include_once ($racine . 'modele/Tournoi.php');
+include_once ($racine . 'modele/TempsDeJeu.php');
+include_once ($racine . 'modele/Faute.php');
+
+function matchFeuilleMatchPdf($pdf, $match_id)
+{
+	global $MATCH_RESULTAT_AJOUER, $MATCH_RESULTAT_EQUIPE1, $MATCH_RESULTAT_EQUIPE2, $MATCH_RESULTAT_NUL, $utilisateur_en_cours;
+	
+	$pdf->AddPage();
+	$pdf->SetFillColor(255, 255, 255);
+		
+		
+	$match = Match::recup($match_id);
+
+	if (!$match)
+	{	
+		$pdf->SetFont('Arial', 'B', 10);
+		cellule($pdf, 200, 8, "L'identifiant de match passé en paramètre est inconnu", 0, 1, 'L');
+	}
+	else
+	{
+		$formation1 = Formation::recup($match->get("formation1_id"));
+		$formation1_joueurs = array();
+		$formation1_score = null;
+		$equipe1 = null;
+		$equipe1_nom = "";
+		$equipe1_couleur_rvb = array(0,0,0);
+		if ($formation1)
+		{
+			$formation1_joueurs = $formation1->getFormationJoueurs();
+			$formation1_score = $match->recupDetailScore($formation1->get("id"));
+			$equipe1 = Equipe::recup($formation1->get("equipe_id"));
+			$equipe1_nom = $equipe1->get("nom");
+			$equipe1_couleur_rvb = $equipe1->recupCouleurBaseRVB();
+		}
+		$formation2 = Formation::recup($match->get("formation2_id"));
+		$formation2_joueurs = array();
+		$formation2_score = null;
+		$equipe2 = null;
+		$equipe2_nom = "";
+		$equipe2_couleur_rvb = array(0,0,0);
+		if ($formation2)
+		{
+			$formation2_joueurs = $formation2->getFormationJoueurs();
+			$formation2_score = $match->recupDetailScore($formation2->get("id"));
+			$equipe2 = Equipe::recup($formation2->get("equipe_id"));
+			$equipe2_nom = $equipe2->get("nom");
+			$equipe2_couleur_rvb = $equipe2->recupCouleurBaseRVB();
+		}
+		$arbitre1 = Joueur::recup($match->get("arbitre1_id"));
+		$arbitre2 = Joueur::recup($match->get("arbitre2_id"));
+		$phase = Phase::recup($match->get("phase_id"));
+		$tournoi = Tournoi::recup($phase->get("tournoi_id"));
+		$temps_de_jeux = TempsDeJeu::recupParChamp("match_id", $match_id, "ordre_temporel ASC");
+		$nb_fautes_personnelles = Faute::recupNbFautesPersoPourDuree($match->recupDuree());
+		
+		$pdf->SetLineWidth(0.5);
+		
+		$pdf->Image("images/LMB.jpg", 20, 10, 7);
+		$pdf->Image("images/CNM.jpg", 38, 10, 10);
+		$pdf->Image("images/UNSLL.jpg", 163, 10, 28);
+		
+		$pdf->SetFillColor(64, 64, 64);
+		$pdf->SetTextColor(255, 255, 255);
+		$pdf->SetFont('Arial', 'B', 11);
+		espace_largeur($pdf, 46);
+		cellule($pdf, 96, 6, "Monobasket - Feuille de marque", 1, 1, 'C');
+		espace_hauteur($pdf, 1);
+		
+		$pdf->SetTextColor(0, 0, 0);
+		$pdf->SetFont('Arial', 'BI', 8);
+		espace_largeur($pdf, 46);
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 41, 6, "Tournoi Senior", 1, 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		cellule($pdf, 6, 6, "", 1, 0, 'C');
+		espace_largeur($pdf, 2);
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 41, 6, "Tournoi Junior", 1, 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		cellule($pdf, 6, 6, "", 1, 1, 'C');
+		espace_hauteur($pdf, 1);
+		
+		$pdf->SetFont('Arial', 'BI', 8);
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 93, 5, "Equipe A : " . $equipe1_nom, 1, 0, 'L');
+		$pdf->SetTextColor(0, 0, 0);
+		espace_largeur($pdf, 2);
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 93, 5, "Equipe B : " . $equipe2_nom, 1, 1, 'L');
+		$pdf->SetTextColor(0, 0, 0);
+		espace_hauteur($pdf, 1);
+		
+		cellule($pdf, 93, 5, "Tournoi : " . $tournoi->get("libelle"), 1, 0, 'L');
+		espace_largeur($pdf, 2);
+		cellule($pdf, 37, 5, "Date : " . $match->get("date"), 1, 0, 'L');
+		espace_largeur($pdf, 1);
+		cellule($pdf, 55, 5, "Lieu : " . $tournoi->get("lieu"), 1, 1, 'L');
+		espace_hauteur($pdf, 1);
+		
+		cellule($pdf, 93, 5, "Match : " . $match->get("libelle"), 1, 0, 'L');
+		espace_largeur($pdf, 2);
+		if ($arbitre1)
+		{
+			$arbitre1_nom = $arbitre1->get("pseudo");
+			if (isset($utilisateur_en_cours))
+			{
+				$arbitre1_nom = $arbitre1_nom . " (" . $arbitre1->get("prenom") . " " . $arbitre1->get("nom") . ")";
+			}
+			cellule($pdf, 46, 5, "Arb. 1 : " . $arbitre1_nom, 1, 0, 'L');
+		}
+		else
+		{
+			cellule($pdf, 46, 5, "Arb. 1 : ", 1, 0, 'L');
+		}
+		espace_largeur($pdf, 1);
+		if ($arbitre2)
+		{
+			$arbitre2_nom = $arbitre2->get("pseudo");
+			if (isset($utilisateur_en_cours))
+			{
+				$arbitre2_nom = $arbitre2_nom . " (" . $arbitre2->get("prenom") . " " . $arbitre2->get("nom") . ")";
+			}
+			cellule($pdf, 46, 5, "Arb. 2 : " . $arbitre2_nom, 1, 1, 'L');
+		}
+		else
+		{
+			cellule($pdf, 46, 5, "Arb. 2 : ", 1, 1, 'L');
+		}
+		espace_hauteur($pdf, 1);
+		
+		$pdf->SetFont('Arial', 'B', 8);
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 93, 5, "Equipe A : " . $equipe1_nom, "TLR", 0, 'L');
+		$pdf->SetTextColor(0, 0, 0);
+		espace_largeur($pdf, 2);
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 93, 5, "Marque courante", 1, 1, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		
+		cellule($pdf, 46, 5, "Temps morts : ", "L", 0, 'C');
+		espace_largeur($pdf, 1);
+		cellule($pdf, 46, 5, "Fautes d'équipe : ", "R", 0, 'C');
+		espace_largeur($pdf, 2);
+		$pdf->SetFillColor(192, 192, 192);
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "A", 1, 0, 'C');
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "B", 1, 0, 'C');
+		espace_largeur($pdf, 1.5);
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "A", 1, 0, 'C');
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "B", 1, 0, 'C');
+		espace_largeur($pdf, 1.5);
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "A", 1, 0, 'C');
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "B", 1, 1, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		$pdf->SetTextColor(0, 0, 0);
+		
+		cellule($pdf, 23, 5, "Mi-temps 1 ", "L", 0, 'L');
+		casesCochees($pdf, 2, 0);
+		espace_largeur($pdf, 18);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 0, $formation1);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 1, 41, 81);
+		
+		cellule($pdf, 23, 5, "Mi-temps 2 ", "L", 0, 'L');
+		casesCochees($pdf, 3, 0);
+		espace_largeur($pdf, 15);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 1, $formation1);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 2, 42, 82);
+		
+		cellule($pdf, 23, 5, "Prolong. ", "L", 0, 'L');
+		casesCochees($pdf, 1, 0);
+		espace_largeur($pdf, 21);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 2, $formation1);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 3, 43, 83);
+		
+		cellule($pdf, 47, 5, "", "L", 0, 'L');
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 3, $formation1);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 4, 44, 84);
+		
+		cellule($pdf, 47, 5, "", "L", 0, 'L');
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 4, $formation1);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 5, 45, 85);
+		
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 40, 5, "Noms du joueurs", "TLR", 0, 'C');
+		cellule($pdf, 17, 5, "N°", "TLR", 0, 'C');
+		cellule($pdf, 36, 5, "Fautes", 1, 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 6, 46, 86);
+		
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 40, 5, "", "BLR", 0, 'C');
+		cellule($pdf, 17, 5, "", "BLR", 0, 'C');
+		for ($j = 1; $j <= 6; $j++)
+		{
+			if ($j <= $nb_fautes_personnelles)
+			{
+				cellule($pdf, 6, 5, $j, 1, 0, 'C');
+			}
+			else
+			{
+				$pdf->SetFillColor(128, 128, 128);
+				cellule($pdf, 6, 5, " ", 1, 0, 'C');
+			}
+		}
+		$pdf->SetFillColor(255, 255, 255);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 7, 47, 87);
+		
+		for ($j = 0; $j < 12; $j++)
+		{
+			$joueur = null;
+			$pseudo = "";
+			$numero = "";
+			$fautes = null;
+			if (isset($formation1_joueurs[$j]))
+			{
+				$joueur = Joueur::recup($formation1_joueurs[$j]["joueur_id"]);
+				$pseudo = $joueur->get("pseudo");
+				$numero = $formation1_joueurs[$j]["numero"];
+				if ($numero == "")
+				{
+					$numero = "#";
+				}
+				$fautes = $match->recupDetailFautes($joueur->get("id"));
+			}
+			
+			$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+			cellule($pdf, 40, 5, $pseudo, 1, 0, 'C');
+			cellule($pdf, 17, 5, $numero, 1, 0, 'C');
+			for ($k = 0; $k < 6; $k++)
+			{
+				if ($k < $nb_fautes_personnelles)
+				{
+					if (isset($fautes) && isset($fautes[$k]))
+					{
+						couleurTempsDeJeu($pdf, $fautes[$k]["temps_de_jeu"]);
+						cellule($pdf, 6, 5, $fautes[$k]["type"], 1, 0, 'C');
+					}
+					else
+					{
+						cellule($pdf, 6, 5, "", 1, 0, 'C');
+					}
+				}
+				else
+				{
+					$pdf->SetFillColor(128, 128, 128);
+					cellule($pdf, 6, 5, " ", 1, 0, 'C');
+				}
+			}
+			$pdf->SetFillColor(255, 255, 255);
+			$pdf->SetTextColor(0, 0, 0);
+		
+			espace_largeur($pdf, 2);
+			ligneMarqueTriple($pdf, $formation1_score, $formation2_score, $j + 8, $j + 48, $j + 88);
+		}
+		
+		
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 93, 5, "Equipe B : " . $equipe2_nom, "TLR", 0, 'L');
+		$pdf->SetTextColor(0, 0, 0);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 20, 60, 100);
+		
+		cellule($pdf, 46, 5, "Temps morts : ", "L", 0, 'C');
+		espace_largeur($pdf, 1);
+		cellule($pdf, 46, 5, "Fautes d'équipe : ", "R", 0, 'C');
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 21, 61, 101);
+		
+		cellule($pdf, 23, 5, "Mi-temps 1 ", "L", 0, 'L');
+		casesCochees($pdf, 2, 0);
+		espace_largeur($pdf, 18);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 0, $formation2);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 22, 62, 102);
+		
+		cellule($pdf, 23, 5, "Mi-temps 2 ", "L", 0, 'L');
+		casesCochees($pdf, 3, 0);
+		espace_largeur($pdf, 15);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 1, $formation2);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 23, 63, 103);
+		
+		cellule($pdf, 23, 5, "Prolong. ", "L", 0, 'L');
+		casesCochees($pdf, 1, 0);
+		espace_largeur($pdf, 21);
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 2, $formation2);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 24, 64, 104);
+		
+		cellule($pdf, 47, 5, "", "L", 0, 'L');
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 3, $formation2);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 25, 65, 105);
+		
+		cellule($pdf, 47, 5, "", "L", 0, 'L');
+		fautesTempsDeJeu($pdf, $temps_de_jeux, 4, $formation2);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 26, 66, 106);
+		
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 40, 5, "Noms du joueurs", "TLR", 0, 'C');
+		cellule($pdf, 17, 5, "N°", "TLR", 0, 'C');
+		cellule($pdf, 36, 5, "Fautes", 1, 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 27, 67, 107);
+		
+		$pdf->SetFillColor(192, 192, 192);
+		cellule($pdf, 40, 5, "", "BLR", 0, 'C');
+		cellule($pdf, 17, 5, "", "BLR", 0, 'C');
+		for ($j = 1; $j <= 6; $j++)
+		{
+			if ($j <= $nb_fautes_personnelles)
+			{
+				cellule($pdf, 6, 5, $j, 1, 0, 'C');
+			}
+			else
+			{
+				$pdf->SetFillColor(128, 128, 128);
+				cellule($pdf, 6, 5, " ", 1, 0, 'C');
+			}
+		}
+		$pdf->SetFillColor(255, 255, 255);
+		espace_largeur($pdf, 2);
+		ligneMarqueTriple($pdf, $formation1_score, $formation2_score, 28, 68, 108);
+		
+		for ($j = 0; $j < 12; $j++)
+		{
+			$joueur = null;
+			$pseudo = "";
+			$numero = "";
+			$fautes = null;
+			if (isset($formation2_joueurs[$j]))
+			{
+				$joueur = Joueur::recup($formation2_joueurs[$j]["joueur_id"]);
+				$pseudo = $joueur->get("pseudo");
+				$numero = $formation2_joueurs[$j]["numero"];
+				if ($numero == "")
+				{
+					$numero = "#";
+				}
+				$fautes = $match->recupDetailFautes($joueur->get("id"));
+			}
+			
+			$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+			cellule($pdf, 40, 5, $pseudo, 1, 0, 'C');
+			cellule($pdf, 17, 5, $numero, 1, 0, 'C');
+			for ($k = 0; $k < 6; $k++)
+			{
+				if ($k < $nb_fautes_personnelles)
+				{
+					if (isset($fautes) && isset($fautes[$k]))
+					{
+						couleurTempsDeJeu($pdf, $fautes[$k]["temps_de_jeu"]);
+						cellule($pdf, 6, 5, $fautes[$k]["type"], 1, 0, 'C');
+					}
+					else
+					{
+						cellule($pdf, 6, 5, "", 1, 0, 'C');
+					}
+				}
+				else
+				{
+					$pdf->SetFillColor(128, 128, 128);
+					cellule($pdf, 6, 5, " ", 1, 0, 'C');
+				}
+			}
+			$pdf->SetFillColor(255, 255, 255);
+			$pdf->SetTextColor(0, 0, 0);
+		
+			espace_largeur($pdf, 2);
+			ligneMarqueTriple($pdf, $formation1_score, $formation2_score, $j + 29, $j + 69, $j + 109);
+		}
+		
+		espace_hauteur($pdf, 1);
+		
+		cellule($pdf, 2, 5, "", "TL", 0, 'C');
+		cellule($pdf, 30, 5, "RESULTATS :", "T", 0, 'L');
+		resultatTempsDeJeu($pdf, $match, $temps_de_jeux[0], "T");
+		if (isset($temps_de_jeux[1]))
+		{
+			resultatTempsDeJeu($pdf, $match, $temps_de_jeux[1], "T");
+		}
+		else
+		{
+			resultatTempsDeJeu($pdf, $match, null, "T");
+		}
+		cellule($pdf, 3, 5, "", "TR", 0, 'C');
+		cellule($pdf, 15, 5, "Score", "TL", 0, 'C');
+		$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "Equipe A", "T", 0, 'C');
+		$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+		cellule($pdf, 15, 5, "Equipe B", "T", 0, 'C');
+		$pdf->SetTextColor(0, 0, 0);
+		cellule($pdf, 2, 5, "", "TR", 1, 'C');
+		
+		cellule($pdf, 32, 5, "", "L", 0, 'C');
+		if (isset($temps_de_jeux[2]))
+		{
+			resultatTempsDeJeu($pdf, $match, $temps_de_jeux[2], "");
+		}
+		else
+		{
+			resultatTempsDeJeu($pdf, $match, null, "");
+		}
+		if (isset ($temps_de_jeux[3]))
+		{
+			resultatTempsDeJeu($pdf, $match, $temps_de_jeux[3], "");
+		}
+		else
+		{
+			resultatTempsDeJeu($pdf, $match, null, "");
+		}
+		cellule($pdf, 3, 5, "", "R", 0, 'C');
+		cellule($pdf, 15, 5, "final", "L", 0, 'C');
+		if ($match->get("resultat") == $MATCH_RESULTAT_AJOUER)
+		{
+			$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+			cellule($pdf, 15, 5, "_____", "", 0, 'C');
+			$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+			cellule($pdf, 15, 5, "_____", "", 0, 'C');
+		}
+		else
+		{
+			$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+			cellule($pdf, 15, 5, $match->get("score1"), "", 0, 'C');
+			$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+			cellule($pdf, 15, 5, $match->get("score2"), "", 0, 'C');
+		}
+		$pdf->SetTextColor(0, 0, 0);
+		cellule($pdf, 2, 5, "", "R", 1, 'C');
+		
+		cellule($pdf, 85, 5, "", "BL", 0, 'C');
+		if (isset($temps_de_jeux[4]))
+		{
+			resultatTempsDeJeu($pdf, $match, $temps_de_jeux[4], "B");
+		}
+		else
+		{
+			resultatTempsDeJeu($pdf, $match, null, "");
+		}
+		cellule($pdf, 3, 5, "", "BR", 0, 'C');
+		cellule($pdf, 15, 5, "Gagnant :", "BL", 0, 'C');
+		if ($match->get("resultat") == $MATCH_RESULTAT_AJOUER)
+		{
+			cellule($pdf, 32, 5, "_______________", "BR", 1, 'C');
+		}
+		else if ($match->get("resultat") == $MATCH_RESULTAT_EQUIPE1)
+		{
+			$pdf->SetTextColor($equipe1_couleur_rvb[0], $equipe1_couleur_rvb[1], $equipe1_couleur_rvb[2]);
+			cellule($pdf, 32, 5, $equipe1_nom, "BR", 1, 'C');
+		}
+		else if ($match->get("resultat") == $MATCH_RESULTAT_EQUIPE2)
+		{
+			$pdf->SetTextColor($equipe2_couleur_rvb[0], $equipe2_couleur_rvb[1], $equipe2_couleur_rvb[2]);
+			cellule($pdf, 32, 5, $equipe2_nom, "BR", 1, 'C');
+		}
+		else if ($match->get("resultat") == $MATCH_RESULTAT_NUL)
+		{
+			cellule($pdf, 32, 5, "Match nul", "BR", 1, 'C');
+		}
+		$pdf->SetTextColor(0, 0, 0);
+		
+		espace_hauteur($pdf, 1);
+		
+		$pdf->SetFillColor(64, 64, 64);
+		$pdf->SetTextColor(255, 255, 255);
+		cellule($pdf, 23.5, 5, "Signatures", "TLR", 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		$pdf->SetTextColor(0, 0, 0);
+		cellule($pdf, 23.5, 5, "Marque", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "Chronomètre", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "24 secondes", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "Arbitre 1", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "Arbitre 2", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "Capitaine A", "1", 0, 'C');
+		cellule($pdf, 23.5, 5, "Capitaine B", "1", 1, 'C');
+		
+		$pdf->SetFillColor(64, 64, 64);
+		$pdf->SetTextColor(255, 255, 255);
+		cellule($pdf, 23.5, 10, "", "BLR", 0, 'C');
+		$pdf->SetFillColor(255, 255, 255);
+		$pdf->SetTextColor(0, 0, 0);
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 0, 'C');
+		cellule($pdf, 23.5, 10, "", "1", 1, 'C');
+	}
+}
+
+function fautesTempsDeJeu($pdf, $temps_de_jeux, $index, $formation)
+{
+	if (isset($temps_de_jeux[$index]))
+	{
+		$temps_de_jeu = $temps_de_jeux[$index];
+		couleurTempsDeJeu($pdf, $temps_de_jeu->get("ordre_temporel"));
+		cellule($pdf, 23, 5, $temps_de_jeu->get("libelle") . " ", 0, 0, 'C');
+		if ($formation)
+		{
+			casesCochees($pdf, $temps_de_jeu->get("nb_faute_equipe"), $temps_de_jeu->recupNbFautesFormation($formation->get("id")));
+		}
+		else
+		{
+			casesCochees($pdf, $temps_de_jeu->get("nb_faute_equipe"), 0);
+		}
+		
+		$pdf->SetTextColor(0, 0, 0);
+		cellule($pdf, 23 - ($temps_de_jeu->get("nb_faute_equipe") * 3), 5, "", "R", 0, 'C');
+	}
+	else
+	{
+		cellule($pdf, 46, 5, "", "R", 0, 'C');
+	}
+}
+
+function casesCochees($pdf, $nb_cases, $nb_cases_cochees)
+{
+	$pdf->SetLineWidth(0.25);
+	for ($i = 1; $i <= $nb_cases; $i++)
+	{
+		$cochee = "";
+		if ($nb_cases_cochees >= $i)
+		{
+			$cochee = "X";
+		}
+		
+		cellule($pdf, 3, 3, $cochee, 1, 0, 'C');
+	}
+	$pdf->SetLineWidth(0.5);
+}
+
+function ligneMarqueTriple($pdf, $formation1_score, $formation2_score, $marque1, $marque2, $marque3)
+{
+	celluleScore($pdf, 7.5, 5, 1, 0, 'C', $marque1, $formation1_score);
+	cellule($pdf, 7.5, 5, $marque1, 1, 0, 'C');
+	cellule($pdf, 7.5, 5, $marque1, 1, 0, 'C');
+	celluleScore($pdf, 7.5, 5, 1, 0, 'C', $marque1, $formation2_score);
+	espace_largeur($pdf, 1.5);
+	celluleScore($pdf, 7.5, 5, 1, 0, 'C', $marque2, $formation1_score);
+	cellule($pdf, 7.5, 5, $marque2, 1, 0, 'C');
+	cellule($pdf, 7.5, 5, $marque2, 1, 0, 'C');
+	celluleScore($pdf, 7.5, 5, 1, 0, 'C', $marque2, $formation2_score);
+	espace_largeur($pdf, 1.5);
+	celluleScore($pdf, 7.5, 5, 1, 0, 'C', $marque3, $formation1_score);
+	cellule($pdf, 7.5, 5, $marque3, 1, 0, 'C');
+	cellule($pdf, 7.5, 5, $marque3, 1, 0, 'C');
+	celluleScore($pdf, 7.5, 5, 1, 1, 'C', $marque3, $formation2_score);
+}
+
+function celluleScore($pdf, $largeur, $hauteur, $bordure, $retour_ligne, $alignement, $marque, $scores)
+{
+	if (isset($scores[$marque]))
+	{
+		couleurTempsDeJeu($pdf, $scores[$marque]["temps_de_jeu"]);
+		if ($scores[$marque]["numero_joueur"] == "")
+		{
+			$scores[$marque]["numero_joueur"] = "#";
+		}
+		cellule($pdf, $largeur, $hauteur, $scores[$marque]["numero_joueur"], $bordure, $retour_ligne, $alignement);
+		$pdf->SetTextColor(0, 0, 0);
+	}
+	else
+	{
+		cellule($pdf, $largeur, $hauteur, "", $bordure, $retour_ligne, $alignement);
+	}
+}
+
+function couleurTempsDeJeu($pdf, $temps_de_jeu)
+{
+	global $MATCH_PDF_TDJ_COULEURS;
+	$pdf->SetTextColor($MATCH_PDF_TDJ_COULEURS[$temps_de_jeu]["rouge"],
+					   $MATCH_PDF_TDJ_COULEURS[$temps_de_jeu]["vert"],
+					   $MATCH_PDF_TDJ_COULEURS[$temps_de_jeu]["bleu"]);
+}
+
+function resultatTempsDeJeu($pdf, $match, $temps_de_jeu, $bordure)
+{
+	global $MATCH_RESULTAT_AJOUER;
+	$formation1 = Formation::recup($match->get("formation1_id"));
+	$formation2 = Formation::recup($match->get("formation2_id"));
+		
+	if ($temps_de_jeu)
+	{
+		couleurTempsDeJeu($pdf, $temps_de_jeu->get("ordre_temporel"));
+		cellule($pdf, 27, 5, $temps_de_jeu->get("libelle") . " ", $bordure, 0, 'R');
+		espace_largeur($pdf, 4, $bordure);
+		cellule($pdf, 4, 5, "A :" . " ", $bordure, 0, 'C');
+		if ($match->get("resultat") == $MATCH_RESULTAT_AJOUER || $formation1 == null)
+		{
+			cellule($pdf, 4, 5, "___", $bordure, 0, 'C');
+		}
+		else
+		{
+			cellule($pdf, 4, 5, $temps_de_jeu->recupScoreFormation($formation1->get("id")), $bordure, 0, 'C');
+		}
+		espace_largeur($pdf, 3, $bordure);
+		cellule($pdf, 4, 5, "B :" . " ", $bordure, 0, 'C');
+		if ($match->get("resultat") == $MATCH_RESULTAT_AJOUER || $formation2 == null)
+		{
+			cellule($pdf, 4, 5, "___", $bordure, 0, 'C');
+		}
+		else
+		{
+			cellule($pdf, 4, 5, $temps_de_jeu->recupScoreFormation($formation2->get("id")), $bordure, 0, 'C');
+		}
+		espace_largeur($pdf, 3, $bordure);
+		$pdf->SetTextColor(0, 0, 0);
+	}
+	else
+	{
+		cellule($pdf, 53, 5, "", $bordure, 0, 'C');
+	}
+}
+?>

@@ -1,0 +1,212 @@
+<?php
+
+// Acces BDD
+static $BDD_HOST 					= "localhost";
+static $BDD_USER 					= "monocycleinfo_lm";
+static $BDD_PASS 					= "2txM0oWO"; 
+static $BDD_DATABASE 				= "monocycleinfo_lmb"; 
+
+// Logger
+static $LOGGER_SORTIE 				= "./logs/logs.txt";
+static $LOGGER_NIVEAU 				= "DEBUG";
+
+// Droits des utilisateurs
+static $DROITS_DESC = array(			0 	=> 	"Aucun droits spécifiques",
+										1 	=>	"Droits personnels",
+										2 	=>	"Droits d'équipes",
+										3 	=>	"Droits de gestion",
+										4 	=>	"Super-utilisateur");
+										
+// Nombre de résultat des recherche
+static $NB_RESULTATS_RECHERCHE_LIGUES 		= 10; 
+static $NB_RESULTATS_RECHERCHE_JOUEURS 		= 25; 
+static $NB_RESULTATS_RECHERCHE_EQUIPES 		= 25; 
+
+// Repertoire de stockage des photos
+static $IMAGE_UPLOAD_DIR					= "images_upload";
+
+// Liste des couleurs proposées par défaut pour les équipes 
+static $COULEURS_BASE = array(		"000000",
+									"444444",
+									"888888",
+									"AA0000",
+									"FF0000",
+									"FF8888",
+									"00AA00",
+									"00FF00",
+									"88FF88",
+									"0000AA",
+									"0000FF",
+									"8888FF",
+									"666600",
+									"999900",
+									"999966",
+									"BBBB00",
+									"BBBB99",
+									"660066",
+									"990099",
+									"996699",
+									"BB00BB",
+									"BB99BB",
+									"006666",
+									"009999",
+									"669999",
+									"00BBBB",
+									"99BBBB");
+
+// Temps entre 2 rafraichissements du chrono
+static $CHRONORAFRAICHISSEMENT = 10;
+
+// Type de ligues
+static $LIGUE_TYPE_DESC = array(		1 	=> 	"Ligue à classement",
+										2 	=>	"Ligue sans classement",
+										3 	=>	"Tournoi unique");
+										
+// Etats liés à une phase, une poule
+static $ETAT_DESC = array(				1 	=> 	"En attente",
+										2 	=>	"En cours",
+										3 	=>	"Terminé");
+										
+// Type de phases
+static $PHASE_TYPE_DESC = array(		1 	=> 	"Poules",
+										2 	=>	"Tableau",
+										3 	=>	"Matchs libres");
+													
+// Type des actions
+static $ACTION_TYPE_GENERIQUE		= 0;
+static $ACTION_TYPE_SHOOT			= 1;
+static $ACTION_TYPE_FAUTE			= 2;
+static $ACTION_TYPE_PASSE			= 3;
+static $ACTION_TYPE_REBOND			= 4;
+static $ACTION_TYPE_CONTRE			= 5;
+static $ACTION_TYPE_INTERCEPTION	= 6;
+
+// Type de shoot
+static $SHOOT_TYPE_DESC = array( 		1 	=> 	"Lancer franc",
+										2 	=> 	"Shoot à 2 points",
+										3 	=>	"Shoot à 3 points");
+										
+// Type de fautes
+static $FAUTE_TYPE_DESC	= array( 		"P" 	=> 	"Faute Personnelle",
+										"T" 	=>	"Faute Technique",
+										"U" 	=>	"Faute Antisportive",
+										"D" 	=>	"Faute Disqualifiante");
+			
+// Type de rebonds
+static $REBOND_TYPE_DESC = array(		1 	=> 	"Rebond offensif",
+										2 	=>	"Rebond défensif");
+									
+// Descriptif de réussite
+static $ACTION_REUSSITE_DESC = array( 	true 	=> 	"réussi",
+										false 	=> 	"raté");
+
+										
+// Résultat d'un match
+static $MATCH_RESULTAT_AJOUER			= 0;
+static $MATCH_RESULTAT_EQUIPE1			= 1;
+static $MATCH_RESULTAT_EQUIPE2		 	= 2;
+static $MATCH_RESULTAT_NUL		 		= 3;
+
+// Nombre de fautes par durée
+static $FAUTES_EQUIPE_PAR_DUREE  = array( 		240 	=> 	2,
+												360		=> 	3,
+												480 	=>	4,
+												600 	=>	5,
+												720 	=>	6,
+												900 	=>	7);
+
+static $FAUTES_PERSO_PAR_DUREE  = array( 		600 	=> 	2,
+												1200	=> 	3,
+												1800 	=>	4,
+												2400 	=>	5,
+												3000 	=>	6,
+												3600 	=>	7);
+												
+static $PERIODES_DESC			 = array( 		1 	=> 	"Période unique",
+												2	=> 	"Mi-temps",
+												3 	=>	"Tiers-temps",
+												4 	=>	"Quart-temps",
+												5 	=>	"Période");
+												
+static $MATCHS_TABLEAU_DESC		 = array( 		1 	=> 	"Finale",
+												2	=> 	"Demi-finale",
+												3 	=>	"Quart de finale",
+												4 	=>	"Huitième de finale",
+												5 	=>	"Seizième de finale",
+												6 	=>	"Petite finale");
+												
+static $MATCHS_NIVEAU_STATS		 = array( 		0 	=> 	"Aucune",
+												1	=> 	"Marqueurs uniquement",
+												2 	=>	"Stats officielles uniquement",
+												3 	=>	"Gestion complète");
+
+$POINTS_VICTOIRE_DEFAUT					= 10000;
+$POINTS_DEFAITE_DEFAUT					= 0;
+$POINTS_NUL_DEFAUT						= 100;
+$GOAL_AVERAGE_ECART_MAX_DEFAUT			= 0;
+
+						
+static $TOURNOI_POINTS_PAR_PLACE	= array( 	1 	=> 	100,
+												2	=> 	85,
+												3 	=>	70,
+												4 	=>	60,
+												5 	=>	55,
+												6 	=>	50,
+												7 	=>	45,
+												8 	=>	40,
+												9 	=>	35,
+												10 	=>	30,
+												11	=>	25,
+												12	=>	20,
+												13	=>	18,
+												14	=>	17,
+												15	=>	16,
+												16	=>	15,
+												17	=>	14,
+												18	=>	13,
+												19	=>	12,
+												20	=>	11,
+												21	=>	10,
+												22	=>	9,
+												23	=>	8,
+												24	=>	7,
+												25	=>	6,
+												26	=>	5,
+												27	=>	4,
+												28	=>	3,
+												29	=>	2,
+												30	=>	1,
+												31	=>	1,
+												32	=>	1,
+												33	=>	1,
+												34	=>	1,
+												35	=>	1,
+												36	=>	1,
+												37	=>	1,
+												38	=>	1,
+												39	=>	1,
+												40	=>	1);
+
+												
+$MATCH_PDF_TDJ_COULEURS[1] 	= array(	"rouge" => 128, "vert" => 0  , "bleu" => 0  );
+$MATCH_PDF_TDJ_COULEURS[2] 	= array(	"rouge" => 0  , "vert" => 0  , "bleu" => 128);
+$MATCH_PDF_TDJ_COULEURS[3] 	= array(	"rouge" => 0  , "vert" => 128, "bleu" => 0  );
+$MATCH_PDF_TDJ_COULEURS[4] 	= array(	"rouge" => 64, "vert" => 0  , "bleu" => 64);
+$MATCH_PDF_TDJ_COULEURS[5] 	= array(	"rouge" => 64, "vert" => 64, "bleu" => 0  );
+
+
+
+print ("<SCRIPT type=\"text/javascript\">");
+print ("IMAGEUPLOADDIR = '" . $IMAGE_UPLOAD_DIR . "';");
+print ("CHRONORAFRAICHISSEMENT = " . $CHRONORAFRAICHISSEMENT . ";");
+print ("ACTIONTYPEGENERIQUE = " . $ACTION_TYPE_GENERIQUE . ";");
+print ("ACTIONTYPESHOOT = " . $ACTION_TYPE_SHOOT . ";");
+print ("ACTIONTYPEFAUTE = " . $ACTION_TYPE_FAUTE . ";");
+print ("ACTIONTYPEPASSE = " . $ACTION_TYPE_PASSE . ";");
+print ("ACTIONTYPEREBOND = " . $ACTION_TYPE_REBOND . ";");
+print ("ACTIONTYPECONTRE = " . $ACTION_TYPE_CONTRE . ";");
+print ("MATCHRESULTATEQUIPE1 = " . $MATCH_RESULTAT_EQUIPE1 . ";");
+print ("MATCHRESULTATEQUIPE2 = " . $MATCH_RESULTAT_EQUIPE2 . ";");
+print ("MATCHRESULTATNUL = " . $MATCH_RESULTAT_NUL . ";");
+print ("</SCRIPT>");
+?>
