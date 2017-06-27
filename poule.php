@@ -21,6 +21,8 @@ include_once ($RACINE . 'utils/Tableur.php');
 			$poule = Poule::recup($_GET["id"]);
 			$phase_poules = PhasePoules::recup($poule->get("phase_poules_id"));
 			$phase = Phase::recup($phase_poules->get("phase_id"));
+			$poule_equipes = $poule->getEquipes();
+			
 			print ($poule->get("libelle") . " de la phase \"" . $phase->get("libelle") . "\"");
 			print ("<INPUT id=\"poule.id\" type=\"hidden\" value=\"" . $_GET["id"] . "\">");
 			print ("<INPUT id=\"tournoi.id\" type=\"hidden\" value=\"" . $phase->get("tournoi_id") . "\">");
@@ -92,7 +94,6 @@ include_once ($RACINE . 'utils/Tableur.php');
 			
 			<?php
 
-			$poule_equipes = $poule->getEquipes();
 			if ($poule_equipes)
 			{
 				print ("<TABLE class=\"tableau_recherche\">");
