@@ -12,7 +12,12 @@ include_once ($RACINE . 'modele/Rebond.php');
 include_once ($RACINE . 'modele/Contre.php');
 include_once ($RACINE . 'modele/Interception.php');
 include_once ($RACINE . 'modele/TempsDeJeu.php');
+include_once ($RACINE . 'modele/Match.php');
+include_once ($RACINE . 'modele/Phase.php');
+include_once ($RACINE . 'modele/Tournoi.php');
+include_once ($RACINE . 'modele/Stat.php');
 
+include_once ($RACINE . 'utils/Logger.php');
 
 $vide = true;
 $joueur_cible_possible = true;
@@ -21,6 +26,43 @@ $description_action = "";
 
 $temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
 $match = Match::recup($temps_de_jeu->get("match_id"));
+$phase = Phase::recup($match->get("phase_id"));
+$tournoi = Tournoi::recup($phase->get("tournoi_id"));
+
+$joueur_source = null;
+$formation_source = null;
+$joueur_cible = null;
+$formation_cible = null;
+
+if ($_POST["joueurSourceId"] != "null")
+{
+	$joueur_source = Joueur::recup($_POST["joueurSourceId"]);
+}
+
+if ($_POST["formationSourceId"] != "null")
+{
+	$formation_source = Formation::recup($_POST["formationSourceId"]);
+	if ($match->get("formation1_id") == $formation_source->get("id"))
+	{
+		$formation_cible = Formation::recup($match->get("formation2_id"));
+	}
+	else if ($match->get("formation2_id") == $formation_source->get("id"))
+	{
+		$formation_cible = Formation::recup($match->get("formation1_id"));
+	}
+}
+
+if ($_POST["joueurCibleId"] != "null")
+{
+	$joueur_cible = Joueur::recup($_POST["joueurCibleId"]);
+}
+
+if ($_POST["formationCibleId"] != "null")
+{
+	$formation_cible = Formation::recup($_POST["formationCibleId"]);
+}
+
+
 
 
 if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
@@ -65,12 +107,25 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 					
 					$action->set("specifique_id", $shoot->get("id"));
 					$action->enregistre();
+							
+					if ($_POST["actionDetail"] != 1)
+					{
+						Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);						
+					}
+					
+					Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"], $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					if ($_POST["actionReussite"] == 1)
+					{
+						Stat::ajouteStats("POINT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), $_POST["actionDetail"], 0);
+						Stat::ajouteStats("SHOOT-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+						Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"] . "-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					}
 					
 					$termine = true;
 				}
 				else
 				{
-					print ("Choississez dans les compositions des équipes le joueur qui a shooté");
+					print ("Choisissez dans les compositions des équipes le joueur qui a shooté");
 				}
 							
 				// Descriptif
@@ -117,16 +172,18 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 					
 					$action->set("specifique_id", $faute->get("id"));
 					$action->enregistre();
-					
+												
+					Stat::ajouteStats("FAUTE", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+
 					$termine = true;
 				}
 				else if ($_POST["joueurSourceId"] == "null")
 				{
-					print ("Choississez dans les compositions des équipes le joueur fautif");
+					print ("Choisissez dans les compositions des équipes le joueur fautif");
 				}
 				else if ($_POST["joueurCibleId"] == "null")
 				{
-					print ("Choississez dans les compositions des équipes le joueur cible de la faute, ou <DIV class=\"champ_a_cliquer\"  onmouseover=\"this.style.cursor='pointer'\" onclick=\"choixJoueur(0, 0);\">Valider la faute sans joueur cible</DIV>");
+					print ("Choisissez dans les compositions des équipes le joueur cible de la faute, ou <DIV class=\"champ_a_cliquer\"  onmouseover=\"this.style.cursor='pointer'\" onclick=\"choixJoueur(0, 0);\">Valider la faute sans joueur cible</DIV>");
 				}
 				
 				// Descriptif
@@ -167,6 +224,8 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				$action1->set("specifique_id", $passe_decisive->get("id"));
 				$action1->enregistre();
 				
+				Stat::ajouteStats("PASSE", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					
 				$action2 = new Action();
 				$action2->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 				$action2->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -182,16 +241,22 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				
 				$action2->set("specifique_id", $shoot->get("id"));
 				$action2->enregistre();
-					
+									
+				Stat::ajouteStats("POINT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 2, 0);
+				Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT-2", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT-2-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+
 				$termine = true;
 			}
 			else if ($_POST["joueurSourceId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur ayant réalisé la passe décisive");
+				print ("Choisissez dans les compositions des équipes le joueur ayant réalisé la passe décisive");
 			}
 			else if ($_POST["joueurCibleId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur cible de la passe décisive (il sera automatiquement crédité d'un shoot à 2 points réussi)");
+				print ("Choisissez dans les compositions des équipes le joueur cible de la passe décisive (il sera automatiquement crédité d'un shoot à 2 points réussi)");
 			}
 			
 			// Descriptif
@@ -222,11 +287,14 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 					$action->set("specifique_id", $rebond->get("id"));
 					$action->enregistre();
 					
+					Stat::ajouteStats("REBOND-" . $_POST["actionDetail"], $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					Stat::ajouteStats("REBOND", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					
 					$termine = true;
 				}
 				else if ($_POST["joueurSourceId"] == "null")
 				{
-					print ("Choississez dans les compositions des équipes le joueur ayant réalisé le rebond");
+					print ("Choisissez dans les compositions des équipes le joueur ayant réalisé le rebond");
 				}
 				
 				// Descriptif
@@ -268,7 +336,10 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				
 				$action->set("specifique_id", $contre->get("id"));
 				$action->enregistre();
-						
+					
+				Stat::ajouteStats("CONTRE", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					
+					
 				$action2 = new Action();
 				$action2->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 				$action2->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -284,16 +355,19 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				
 				$action2->set("specifique_id", $shoot->get("id"));
 				$action2->enregistre();
-					
+									
+				Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT-2", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+
 				$termine = true;
 			}
 			else if ($_POST["joueurSourceId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur ayant réalisé le contre");
+				print ("Choisissez dans les compositions des équipes le joueur ayant réalisé le contre");
 			}
 			else if ($_POST["joueurCibleId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur ayant subit le contre (il sera automatiquement crédité d'un shoot à 2 points raté)");
+				print ("Choisissez dans les compositions des équipes le joueur ayant subit le contre (il sera automatiquement crédité d'un shoot à 2 points raté)");
 			}
 			
 			// Descriptif
@@ -321,16 +395,18 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				
 				$action->set("specifique_id", $interception->get("id"));
 				$action->enregistre();
-				
+					
+				Stat::ajouteStats("INTERCEPTION", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					
 				$termine = true;
 			}
 			else if ($_POST["joueurSourceId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur ayant réalisé l'interception");
+				print ("Choisissez dans les compositions des équipes le joueur ayant réalisé l'interception");
 			}
 			else if ($_POST["joueurCibleId"] == "null")
 			{
-				print ("Choississez dans les compositions des équipes le joueur ayant déclenché la perte de balle");
+				print ("Choisissez dans les compositions des équipes le joueur ayant déclenché la perte de balle");
 			}
 			
 			// Descriptif
@@ -359,11 +435,11 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				}
 				else if ($_POST["joueurSourceId"] == "null")
 				{
-					print ("Choississez dans les compositions des équipes le joueur source de l'action");
+					print ("Choisissez dans les compositions des équipes le joueur source de l'action");
 				}
 				else if ($_POST["joueurCibleId"] == "null")
 				{
-					print ("Choississez dans les compositions des équipes le joueur cible de l'action, ou <DIV class=\"champ_a_cliquer\"  onmouseover=\"this.style.cursor='pointer'\" onclick=\"choixJoueur(0, 0);\">Valider l'action sans joueur cible</DIV>");
+					print ("Choisissez dans les compositions des équipes le joueur cible de l'action, ou <DIV class=\"champ_a_cliquer\"  onmouseover=\"this.style.cursor='pointer'\" onclick=\"choixJoueur(0, 0);\">Valider l'action sans joueur cible</DIV>");
 				}
 				
 				// Descriptif
@@ -385,12 +461,9 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 	print ($description_action);
 
 	// Sélection d'un joueur source
-	if ($_POST["joueurSourceId"] != "null" && $_POST["formationSourceId"] != "null" && !$termine)
+	if (isset($joueur_source) && isset($formation_source) && !$termine)
 	{
 		$vide = false;
-		
-		$joueur_source = Joueur::recup($_POST["joueurSourceId"]);
-		$formation_source = Formation::recup($_POST["formationSourceId"]);
 		
 		if ($joueur_source && $formation_source)
 		{
@@ -402,19 +475,9 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 		}
 		
 		// Sélection d'un joueur cible
-		if ($_POST["joueurCibleId"] != "null" && $_POST["formationCibleId"] != "null" && $joueur_cible_possible)
+		if (isset($joueur_cible) && isset($formation_cible) && $joueur_cible_possible)
 		{
-			$joueur_cible = Joueur::recup($_POST["joueurCibleId"]);
-			$formation_cible = Formation::recup($_POST["formationCibleId"]);
-			
-			if ($joueur_cible && $formation_cible)
-			{
-				print (" sur " . $joueur_cible->get("pseudo") . " (" . $formation_cible->getNumeroJoueur($joueur_cible->get("id")) . ")");
-			}
-			else
-			{
-				print ("<DIV class=\"messageErreur\" >Impossible de récupérer les données du joueur " . $_POST["joueurCibleId"] . " pour la formation " . $_POST["formationCibleId"] . "</DIV>");
-			}
+			print (" sur " . $joueur_cible->get("pseudo") . " (" . $formation_cible->getNumeroJoueur($joueur_cible->get("id")) . ")");
 		}
 	}
 
