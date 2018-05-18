@@ -17,8 +17,6 @@ include_once ($RACINE . 'modele/Phase.php');
 include_once ($RACINE . 'modele/Tournoi.php');
 include_once ($RACINE . 'modele/Stat.php');
 
-include_once ($RACINE . 'utils/Logger.php');
-
 $vide = true;
 $joueur_cible_possible = true;
 $termine = false;
@@ -57,11 +55,6 @@ if ($_POST["joueurCibleId"] != "null")
 	$joueur_cible = Joueur::recup($_POST["joueurCibleId"]);
 }
 
-if ($_POST["formationCibleId"] != "null")
-{
-	$formation_cible = Formation::recup($_POST["formationCibleId"]);
-}
-
 
 
 
@@ -90,8 +83,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 			{
 				if ($_POST["joueurSourceId"] != "null")
 				{
-					$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-					
 					$action = new Action();
 					$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 					$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -110,15 +101,18 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 							
 					if ($_POST["actionDetail"] != 1)
 					{
-						Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);						
+						Stat::ajouteStats("SHOOT", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);						
+            if ($_POST["actionReussite"] == 1)
+            {
+              Stat::ajouteStats("SHOOT-REUSSI", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+            }
 					}
 					
-					Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"], $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+					Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"], $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
 					if ($_POST["actionReussite"] == 1)
 					{
-						Stat::ajouteStats("POINT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), $_POST["actionDetail"], 0);
-						Stat::ajouteStats("SHOOT-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
-						Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"] . "-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+						Stat::ajouteStats("POINT", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), $_POST["actionDetail"], 0);
+						Stat::ajouteStats("SHOOT-" . $_POST["actionDetail"] . "-REUSSI", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
 					}
 					
 					$termine = true;
@@ -155,8 +149,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 			{
 				if ($_POST["joueurSourceId"] != "null" && $_POST["joueurCibleId"] != "null")
 				{
-					$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-					
 					$action = new Action();
 					$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 					$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -174,7 +166,7 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 					$action->enregistre();
 												
 					Stat::ajouteStats("FAUTE", $_POST["joueurSourceId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
-
+         
 					$termine = true;
 				}
 				else if ($_POST["joueurSourceId"] == "null")
@@ -207,8 +199,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 		{
 			if ($_POST["joueurSourceId"] != "null" && $_POST["joueurCibleId"] != "null")
 			{
-				$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-				
 				$action1 = new Action();
 				$action1->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 				$action1->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -241,7 +231,7 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				
 				$action2->set("specifique_id", $shoot->get("id"));
 				$action2->enregistre();
-									
+        
 				Stat::ajouteStats("POINT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 2, 0);
 				Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
 				Stat::ajouteStats("SHOOT-REUSSI", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
@@ -270,8 +260,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 			{
 				if ($_POST["joueurSourceId"] != "null")
 				{
-					$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-					
 					$action = new Action();
 					$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 					$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -320,8 +308,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 		{
 			if ($_POST["joueurSourceId"] != "null" && $_POST["joueurCibleId"] != "null")
 			{
-				$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-				
 				$action = new Action();
 				$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 				$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -356,8 +342,8 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 				$action2->set("specifique_id", $shoot->get("id"));
 				$action2->enregistre();
 									
-				Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
-				Stat::ajouteStats("SHOOT-2", $_POST["joueurCibleId"], $formation_source->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_cible->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT", $_POST["joueurCibleId"], $formation_cible->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_source->get("equipe_id"), 1, 0);
+				Stat::ajouteStats("SHOOT-2", $_POST["joueurCibleId"], $formation_cible->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation_source->get("equipe_id"), 1, 0);
 
 				$termine = true;
 			}
@@ -379,8 +365,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 		{
 			if ($_POST["joueurSourceId"] != "null" && $_POST["joueurCibleId"] != "null")
 			{
-				$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-				
 				$action = new Action();
 				$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 				$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -420,8 +404,6 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 			{
 				if ($_POST["joueurSourceId"] != "null" && $_POST["joueurCibleId"] != "null")
 				{
-					$temps_de_jeu = TempsDeJeu::recup($_POST["tempsDeJeuId"]);
-					
 					$action = new Action();
 					$action->set("temps_de_jeu_id", $_POST["tempsDeJeuId"]);
 					$action->set("temps", $temps_de_jeu->get("duree") - ($_POST["tempsMinutes"] * 60) - $_POST["tempsSecondes"]);
@@ -497,7 +479,7 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 
 	if ($termine)
 	{
-		print ("<SCRIPT>videAction(); chargeFormation1(); chargeFormation2(); chargeScores(); chargeActionEnCours(); chargeResume();</SCRIPT>");
+		//print ("<SCRIPT>videAction(); chargeFormation1(); chargeFormation2(); chargeScores(); chargeActionEnCours(); chargeResume();</SCRIPT>");
 	}
 }
 				

@@ -112,7 +112,8 @@ include_once ($RACINE . 'utils/Tableur.php');
 			print ("<BR/>");
 			
 	
-			print ("<DIV class=\"soustitre\">Statistiques</DIV>");
+			/*
+      print ("<DIV class=\"soustitre\">Statistiques</DIV>");
 			print ("<BR/>");
 			
 			Tableur::dessineTableau([$equipe], true
@@ -220,7 +221,7 @@ include_once ($RACINE . 'utils/Tableur.php');
 				  , "tableau_recherche", "tableau_recherche_tr", "tableau_recherche_th", "tableau_recherche_td"
 				  , array(5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 				  , array("", "Nombre de matchs joués", "Nombre de minutes jouées", "Nombre de points marqués", "Nombre de paniers marqués, à 2 et à 3 points", "Nombre de paniers marqués, dans le cadre d'un match sans saisie des statistiques", "Nombre de paniers marqués, dans le cadre d'un match avec saisie des statistiques", "Nombre de paniers tentés, dans le cadre d'un match avec saisie des statistiques", "Pourcentage de réussite au shoot, dans le cadre d'un match avec saisie des statistiques", "Nombre de paniers marqués à 3 points", "Nombre de paniers marqués à 3 points, dans le cadre d'un match sans saisie des statistiques", "Nombre de paniers marqués à 3 points, dans le cadre d'un match avec saisie des statistiques", "Nombre de paniers tentés à 3 points, dans le cadre d'un match avec saisie des statistiques", "Pourcentage de réussite au shoot à 3 points, dans le cadre d'un match avec saisie des statistiques", "Nombre de lancés francs marqués", "Nombre de lancés francs marqués, dans le cadre d'un match sans saisie des statistiques", "Nombre de lancés francs marqués, dans le cadre d'un match avec saisie des statistiques", "Nombre de lancés francs tentés, dans le cadre d'un match avec saisie des statistiques", "Pourcentage de réussite au lancé franc, dans le cadre d'un match avec saisie des statistiques", "Nombre de rebonds offensifs, dans le cadre d'un match avec saisie des statistiques", "Nombre de rebonds défensifs, dans le cadre d'un match avec saisie des statistiques", "Nombre de rebonds total, dans le cadre d'un match avec saisie des statistiques", "Nombre de passes décisives réalisées, dans le cadre d'un match avec saisie des statistiques", "Nombre d'interceptions de balle réalisées, dans le cadre d'un match avec saisie des statistiques", "Nombre de contres effectués, dans le cadre d'un match avec saisie des statistiques", "Nombre de fautes commises")
-			);
+			);*/
 			
 			
 			/*$tournois = $equipe->recupTournois();

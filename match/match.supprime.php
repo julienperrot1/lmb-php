@@ -3,10 +3,9 @@
 include_once ('../ajax/ajax_base.php');
 
 include_once ($RACINE . 'modele/Match.php');
-include_once ($RACINE . 'modele/Poule.php');
-include_once ($RACINE . 'modele/PhasePoules.php');
 include_once ($RACINE . 'modele/Formation.php');
 include_once ($RACINE . 'modele/TempsDeJeu.php');
+include_once ($RACINE . 'modele/Action.php');
 
 $valide = true;
 
@@ -15,8 +14,8 @@ if (isset($_POST["matchId"]))
 {
 	$message_erreur = "";
 	
+  /* Récupération des informations du match */
 	$match = Match::recup($_POST["matchId"]);
-	
 	$temps_de_jeux = TempsDeJeu::recupParChamp("match_id", $_POST["matchId"]);
 	
 	if ($temps_de_jeux)
@@ -26,7 +25,12 @@ if (isset($_POST["matchId"]))
 			$actions = Action::recupParChamp("temps_de_jeu_id", $temps_de_jeu->get("id"));
 			foreach ($actions as $action)
 			{
-				if (!Action::supprimeAvecSpecifique($action->get("id")))
+				if (!$action->supprimeStat())
+				{
+					$message_erreur = $message_erreur . "Erreur de suppression des stats de l'action " . $action->get("id") . "<BR/>";
+				}
+        
+				if (!$action->supprimeAvecSpecifique())
 				{
 					$message_erreur = $message_erreur . "Erreur de suppression de l'action " . $action->get("id") . "<BR/>";
 				}
@@ -34,7 +38,7 @@ if (isset($_POST["matchId"]))
 			
 			if (!TempsDeJeu::supprime($temps_de_jeu->get("id")))
 			{
-				$message_erreur = $message_erreur . "Erreur de suppression de l'action " . $temps_de_jeu->get("id") . "<BR/>";
+				$message_erreur = $message_erreur . "Erreur de suppression du temps de jeu " . $temps_de_jeu->get("id") . "<BR/>";
 			}
 		}
 	}

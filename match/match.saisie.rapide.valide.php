@@ -3,6 +3,8 @@
 include_once ('../ajax/ajax_base.php');
 
 include_once ($RACINE . 'modele/Match.php');
+include_once ($RACINE . 'modele/Phase.php');
+include_once ($RACINE . 'modele/Tournoi.php');
 include_once ($RACINE . 'modele/Formation.php');
 include_once ($RACINE . 'modele/TempsDeJeu.php');
 
@@ -20,6 +22,8 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 	if ($valide)
 	{
 		$match = Match::recup($_POST["matchId"]);
+		$phase = Phase::recup($match->get("phase_id"));
+		$tournoi = Tournoi::recup($phase->get("tournoi_id"));
 		$formation1 = Formation::recup($match->get("formation1_id"));
 		$formation2 = Formation::recup($match->get("formation2_id"));
 		
@@ -69,6 +73,17 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 								$action->set("specifique_id", $shoot->get("id"));
 								$action->enregistre();
 								
+                // Statistiques
+                if ($type != 1)
+                {
+                  Stat::ajouteStats("SHOOT", $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), 1, 0);						
+                  Stat::ajouteStats("SHOOT-REUSSI", $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), 1, 0);
+                }
+                
+                Stat::ajouteStats("SHOOT-" . $type, $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), 1, 0);
+                Stat::ajouteStats("SHOOT-" . $type . "-REUSSI", $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), 1, 0);
+                Stat::ajouteStats("POINT", $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), $type, 0);
+          
 								$temps = $temps + 1;
 							}
 							else
@@ -113,7 +128,18 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 								
 								$action->set("specifique_id", $shoot->get("id"));
 								$action->enregistre();
-								
+																
+                // Statistiques
+                if ($type != 1)
+                {
+                  Stat::ajouteStats("SHOOT", $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), 1, 0);						
+                  Stat::ajouteStats("SHOOT-REUSSI", $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), 1, 0);
+                }
+                
+                Stat::ajouteStats("SHOOT-" . $type, $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), 1, 0);
+                Stat::ajouteStats("SHOOT-" . $type . "-REUSSI", $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), 1, 0);
+                Stat::ajouteStats("POINT", $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), $type, 0);
+          
 								$temps = $temps + 1;
 							}
 							else
@@ -157,7 +183,10 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 								
 								$action->set("specifique_id", $faute->get("id"));
 								$action->enregistre();
-								
+                
+								// Statistiques
+                Stat::ajouteStats("FAUTE", $joueur_id, $formation1->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation2->get("equipe_id"), 1, 0);
+         
 								$temps = $temps + 1;
 							}
 							else
@@ -202,6 +231,9 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 								$action->set("specifique_id", $faute->get("id"));
 								$action->enregistre();
 								
+								// Statistiques
+                Stat::ajouteStats("FAUTE", $joueur_id, $formation2->get("equipe_id"), $temps_de_jeu->get("id"), $match->get("id"), $tournoi->get("id"), $formation1->get("equipe_id"), 1, 0);
+         
 								$temps = $temps + 1;
 							}
 							else

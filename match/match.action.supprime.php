@@ -9,13 +9,23 @@ if (isset($utilisateur_en_cours) && $utilisateur_en_cours->get("droits") >= 3)
 {
 	if (isset($_POST["actionId"]))
 	{
-		if (Action::supprimeAvecSpecifique($_POST["actionId"]))
-		{
-			print ("<SCRIPT>chargeFormation1(); chargeFormation2(); chargeScores(); chargeResume();</SCRIPT>");
-		}
+    /* Récupération des informations de l'action en cours de suppression */
+    $action = Action::recup($_POST["actionId"]);
+    if ($action->supprimeStat())
+    {
+      /* Suppression de l'action */
+      if ($action->supprimeAvecSpecifique())
+      {
+        print ("<SCRIPT>chargeFormation1(); chargeFormation2(); chargeScores(); chargeResume();</SCRIPT>");
+      }		
+      else
+      {
+        print ("<DIV class=\"messageErreur\" >Erreur lors de la suppression de l'action. Attention, stat faussée !!!</DIV>");
+      }
+    }
 		else
 		{
-			print ("<DIV class=\"messageErreur\" >Erreur lors de la suppression de l'action</DIV>");
+			print ("<DIV class=\"messageErreur\" >Erreur lors de la suppression des stats de l'action/DIV>");
 		}
 	}
 }

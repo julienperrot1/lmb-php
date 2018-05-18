@@ -8,7 +8,7 @@ static $BDD_DATABASE 				= "monocycleinfo_lmb";
 
 // Logger
 static $LOGGER_SORTIE 				= "./logs/logs.txt";
-static $LOGGER_NIVEAU 				= "DEBUG";
+static $LOGGER_NIVEAU 				= "INFO";
 
 // Droits des utilisateurs
 static $DROITS_DESC = array(			0 	=> 	"Aucun droits spécifiques",
