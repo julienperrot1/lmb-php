@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 $RACINE = "";
 print ("<SCRIPT type=\"text/javascript\">");
@@ -31,8 +31,8 @@ include_once ($RACINE . 'config.php');
 				
 						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'index.php';\">Accueil</DIV></TD>");			
 						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'joueurs.php';\">Les joueurs</DIV></TD>");			
-						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'equipes.php';\">Les équipes</DIV></TD>");	
-						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'ligue.php?id=8';\">LMB 2016-17</DIV></TD>");
+						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'equipes.php';\">Les Equipes</DIV></TD>");	
+						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'ligue.php?id=10';\">LMB 2017-18</DIV></TD>");
 						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'ligues.php';\">Les autres ligues</DIV></TD>");	
 						print ("<TD><DIV onmouseover=\"this.style.cursor='pointer'\" onclick=\"window.location.href = 'aide.php';\">Aide d'utilisation</DIV></TD>");	
 						
